@@ -10,18 +10,18 @@ APIHandler = class {
 	}
 
 	async getRestAPIJson(baseUrl) {
-		let js = 0
+		let js = 0;
 		try {
-                        let response = await fetch(baseUrl);
-                        js = await response.json();
-                        if (js.hasOwnProperty('code')) {
-                                throw new Error(js['reason'])
-                        }
-                } catch(e) {
+        	let response = await fetch(baseUrl);
+        	js = await response.json();
+            if (js.hasOwnProperty('code')) {
+            	throw new Error(js['reason'])
+            }
+        } catch(e) {
                         //console.log(e);
 			return null;
-                }
-                return js;
+        }
+    	return js;
 	}
 
 	async getAllZeroXQuotes(tokenAssets, buyToken) {
@@ -58,7 +58,7 @@ APIHandler = class {
 			ethplorerJSON[json.tokens[i].tokenInfo.name] = {'balance': json.tokens[i].balance, 'decimals': json.tokens[i].tokenInfo.decimals};
 		}
 		return ethplorerJSON;
-        }
+    }
 }
 async function Test() {
 	let api = new APIHandler(process.argv[2], process.argv[3]);

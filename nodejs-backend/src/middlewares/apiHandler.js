@@ -1,14 +1,10 @@
 fetch = require('node-fetch');
+express = require('express');
 const zeroXBaseUrl = `https://api.0x.org/swap/v1/quote?`;
 const ethplorerBaseUrl = `https://api.ethplorer.io/getAddressInfo/`;
 const etherDecimals = '18';
 
 APIHandler = class {
-	constructor(cryptoAddress, apiKey) {
-		this.cryptoAddress = cryptoAddress;
-		this.apiKey = apiKey;
-	}
-
 	async getRestAPIJson(baseUrl) {
 		let js = 0;
 		try {
@@ -18,7 +14,6 @@ APIHandler = class {
             	throw new Error(js['reason'])
             }
         } catch(e) {
-                        //console.log(e);
 			return null;
         }
     	return js;
@@ -50,20 +45,29 @@ APIHandler = class {
 		return zeroX;
 	}
 
-	async getEthplorer() {
-		let json = await this.getRestAPIJson(ethplorerBaseUrl + this.cryptoAddress + `?apiKey=` + this.apiKey);
+	async getEthplorer(cryptoAddress, apiKey) {
+		let json = await this.getRestAPIJson(ethplorerBaseUrl + cryptoAddress + `?apiKey=` + apiKey);
 		let ethplorerJSON = {};
-		ethplorerJSON['ETH'] = {'balance': json.ETH.balance * Math.pow(10, etherDecimals), 'decimals': etherDecimals};
+		ethplorerJSON['Ethereum'] = {'balance': json.ETH.balance * Math.pow(10, etherDecimals), 'decimals': etherDecimals, 'symbol': 'ETH'};
 		for(let i = 0; i < json.tokens.length; i++) {
-			ethplorerJSON[json.tokens[i].tokenInfo.name] = {'balance': json.tokens[i].balance, 'decimals': json.tokens[i].tokenInfo.decimals};
+			ethplorerJSON[json.tokens[i].tokenInfo.name] = {'balance': json.tokens[i].balance, 'decimals': json.tokens[i].tokenInfo.decimals, 'symbol': json.tokens[i].tokenInfo.symbol};
 		}
 		return ethplorerJSON;
     }
 }
 async function Test() {
-	let api = new APIHandler(process.argv[2], process.argv[3]);
-	let walletAssets = await api.getEthplorer();
-	api.getAllZeroXQuotes(walletAssets, 'DAI');
+	var api = new APIHandler();
+	let app = express();
+	app.get('/', function(req, res) {
+		//api.getEthplorer(process.argv[2], process.argv[3]).then(res => walletAssets = res);
+		let walletAdress = req.query.walletAddress;
+		let apiKey = req.query.apiKey;
+		api.getEthplorer(walletAdress, apiKey).then(function(result) {
+			let walletAssets = result;
+			res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+			res.json(walletAssets);
+		});
+	}).listen(1234);
 }
 
 Test();

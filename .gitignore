@@ -1,4 +1,4 @@
 node_modules/
 package*
-nodejs-backend/src/middlewares/hiddenkeys.cfg
+hiddenkeys.cfg
 test.go

@@ -2,3 +2,6 @@ node_modules/
 package*
 hiddenkeys.cfg
 test.go
+react-frontend/src/data.js
+react-frontend/*log
+react-frontend/.eslintcache

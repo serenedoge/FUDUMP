@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
+import {APIKEY} from './data.js'
 const fetch = require('/mnt/d/UbuntuHome/projects/FUDUMP/node_modules/node-fetch');
 
 function TextInput(props) {
@@ -44,23 +45,17 @@ class MasterForm extends React.Component {
   constructor(props) {
     super(props);
     this.serverUrl = 'http://localhost:1234/';
+    this.apiKey = APIKEY;
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
 
     this.state = {
-      displayKeys: ['walletAddress', 'apiKey'],
+      displayKeys: ['walletAddress'],
       walletAddress: {
         className: "walletAddress",
         type: "text",
         placeholder: "Input Wallet Address",
-        value: "",
-        staticText: ""
-      },
-      apiKey: {
-        className: "apiKey",
-        type: "text",
-        placeholder: "Input API Key",
         value: "",
         staticText: ""
       },
@@ -72,15 +67,19 @@ class MasterForm extends React.Component {
   generateWalletDisplay(walletAssets) {
     alert(walletAssets);
     let newState = {};
+    let currBalance;
+    let currText;
     newState['displayKeys'] = [];
     newState['stage'] = 2;
     newState['clickedSubmit'] = false;
     for (let key of Object.keys(walletAssets)) {
+      currBalance = walletAssets[key].Balance / Math.pow(10, walletAssets[key].Decimals);
+      currText = String(key) + "($" + walletAssets[key].Symbol + "), CurrEthPrice = " + walletAssets[key].CurrEthPrice + ", BoughtEthPrice = " + walletAssets[key].BoughtEthPrice + ": "
       newState[key] = {
         className: String(key),
         type: "number",
-        value: walletAssets[key].Balance / Math.pow(10, walletAssets[key].Decimals),
-        staticText: String(key) + "(" + walletAssets[key].Symbol + "), CurrEthPrice = " + walletAssets[key].CurrEthPrice + ", BoughtEthPrice = " + walletAssets[key].BoughtEthPrice + ": ",
+        value: currBalance,
+        staticText: currText,
         min: 0,
         max: walletAssets[key].Balance / Math.pow(10, walletAssets[key].Decimals)
       };
@@ -104,7 +103,7 @@ class MasterForm extends React.Component {
 
     if(this.state.stage === 1) {
       this.setState({clickedSubmit: true});
-      fetch(this.serverUrl + '?walletAddress=' + this.state.walletAddress.value + '&apiKey=' + this.state.apiKey.value).then(res => {return res.json()}).then(jsresult => this.generateWalletDisplay(jsresult));
+      fetch(this.serverUrl + '?walletAddress=' + this.state.walletAddress.value + '&apiKey=' + this.apiKey).then(res => {return res.json()}).then(jsresult => this.generateWalletDisplay(jsresult));
     }
   }
 

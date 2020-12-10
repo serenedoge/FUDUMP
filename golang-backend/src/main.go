@@ -13,8 +13,6 @@ import (
 func main() {
 	http.HandleFunc("/", handler)
 	log.Fatal(http.ListenAndServe(":1234", nil))
-	/*api := &APIHandler{}
-	api.getEthPriceForToken("0xC2A7eb7921950B48Fa0daab92b27F88Daacc49f0", "EK-pUeRo-9PVY5L7-boYLU", "0x1ceb5cb57c4d4e2b2433641b95dd330a33185a44", 18)*/
 	return
 }
 
@@ -78,25 +76,33 @@ func (api APIHandler) getBoughtEthPriceForToken(cryptoAddress, apiKey, tokenAddr
 func (api APIHandler) getEthplorer(cryptoAddress, apiKey string) map[string]WalletAsset {
 	var walletAPI EthplorerWalletAPI
 	var eth WalletAsset
+	var decs uint64
 	ethplorerJSON := make(map[string]WalletAsset)
 	respStr := api.getRestAPIJson(fmt.Sprintf(ETHPLORERFORMATSTR, cryptoAddress, apiKey))
 	json.Unmarshal([]byte(respStr), &walletAPI)
-	eth.Balance = walletAPI.ETH.Balance * math.Pow(10, 18)
-	eth.Decimals = 18
-	eth.Symbol = "ETH"
-	eth.Address = "0"
-	eth.CurrUsdPrice = walletAPI.ETH.Price.Rate
-	ethplorerJSON["Ethereum"] = eth
+
+	if walletAPI.ETH.Balance > 0.01 {
+		eth.Balance = walletAPI.ETH.Balance * math.Pow(10, 18)
+		eth.Decimals = 18
+		eth.Symbol = "ETH"
+		eth.Address = "0"
+		eth.CurrUsdPrice = walletAPI.ETH.Price.Rate
+		ethplorerJSON["Ethereum"] = eth
+	}
+
 	for _, element := range walletAPI.Tokens {
 		var curr WalletAsset
-		curr.Balance = element.Balance
-		curr.Decimals, _ = strconv.ParseUint(element.TokenInfo.Decimals, 10, 32)
-		curr.Symbol = element.TokenInfo.Symbol
-		curr.Address = element.TokenInfo.Address
-		curr.CurrEthPrice = api.getZeroXCurrPrice(curr.Address, curr.Decimals)
-		curr.CurrUsdPrice = element.TokenInfo.Price.Rate
-		curr.BoughtEthPrice = api.getBoughtEthPriceForToken(cryptoAddress, apiKey, element.TokenInfo.Address, curr.Decimals)
-		ethplorerJSON[element.TokenInfo.Name] = curr
+		decs, _ = strconv.ParseUint(element.TokenInfo.Decimals, 10, 32)
+		if element.Balance > 0.01*math.Pow(10, float64(decs)) {
+			curr.Balance = element.Balance
+			curr.Decimals = decs
+			curr.Symbol = element.TokenInfo.Symbol
+			curr.Address = element.TokenInfo.Address
+			curr.CurrEthPrice = api.getZeroXCurrPrice(curr.Address, curr.Decimals)
+			curr.CurrUsdPrice = element.TokenInfo.Price.Rate
+			curr.BoughtEthPrice = api.getBoughtEthPriceForToken(cryptoAddress, apiKey, element.TokenInfo.Address, curr.Decimals)
+			ethplorerJSON[element.TokenInfo.Name] = curr
+		}
 	}
 	return ethplorerJSON
 }

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import {APIKEY} from './data.js'
 const fetch = require('/mnt/d/UbuntuHome/projects/FUDUMP/node_modules/node-fetch');
+const Web3 = require("web3");
 
 function TextInput(props) {
   return (
@@ -49,23 +50,33 @@ class MasterForm extends React.Component {
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.connectMetaMask = this.connectMetaMask.bind(this);
 
     this.state = {
       displayKeys: ['walletAddress'],
       walletAddress: {
         className: "walletAddress",
         type: "text",
-        placeholder: "Input Wallet Address",
+        placeholder: "",
         value: "",
         staticText: ""
       },
       stage: 1,
       clickedSubmit: false
     };
+
+    this.connectMetaMask();
+  }
+
+  async connectMetaMask() {
+    window.web3 = new Web3(window.web3.currentProvider);
+    let walletAddr = this.state.walletAddress;
+    await window.ethereum.enable();
+    walletAddr.value = window.web3.currentProvider.selectedAddress;
+    this.setState({walletAddr});
   }
 
   generateWalletDisplay(walletAssets) {
-    alert(walletAssets);
     let newState = {};
     let currBalance;
     let currText;
@@ -74,7 +85,7 @@ class MasterForm extends React.Component {
     newState['clickedSubmit'] = false;
     for (let key of Object.keys(walletAssets)) {
       currBalance = walletAssets[key].Balance / Math.pow(10, walletAssets[key].Decimals);
-      currText = String(key) + "($" + walletAssets[key].Symbol + "), CurrEthPrice = " + walletAssets[key].CurrEthPrice + ", BoughtEthPrice = " + walletAssets[key].BoughtEthPrice + ": "
+      currText = String(key) + "($" + walletAssets[key].Symbol + "), Change = " + walletAssets[key].PercentChange + "%: ";
       newState[key] = {
         className: String(key),
         type: "number",

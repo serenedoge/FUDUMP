@@ -3,8 +3,8 @@ package main
 const ZEROXURLFORMATSTR = "https://api.0x.org/swap/v1/quote?buyToken=%s&sellToken=%s&sellAmount=%s"
 const ZEROXURLPRICEFORMATSTR = "https://api.0x.org/swap/v1/quote?buyToken=%s&sellToken=%s&sellAmount=%d"
 const ETHPLORERFORMATSTR = "https://api.ethplorer.io/getAddressInfo/%s?apiKey=%s"
-const ETHPLORERADDRHIST = "https://api.ethplorer.io/getAddressHistory/%s?apiKey=%s&token=%s&limit=1"
-const ETHPLORERTSHIST = "https://api.ethplorer.io/getAddressTransactions/%s?apiKey=%s&timestamp=%d"
+const ETHPLORERADDRHIST = "https://api.ethplorer.io/getAddressHistory/%s?apiKey=%s&token=%s&limit=5"
+const ETHPLORERTSHIST = "https://api.ethplorer.io/getTxInfo/%s?apiKey=%s"
 
 type APIHandler struct {
 }
@@ -63,6 +63,7 @@ type WalletAsset struct {
 	CurrEthPrice   float64
 	CurrUsdPrice   float64
 	BoughtEthPrice float64
+	PercentChange  string
 }
 
 type EthplorerWalletAPI struct {
@@ -152,12 +153,60 @@ type AddrTokHistory struct {
 	} `json:"operations"`
 }
 
-type AddrTsHistory []struct {
-	Timestamp int     `json:"timestamp"`
-	From      string  `json:"from"`
-	To        string  `json:"to"`
-	Hash      string  `json:"hash"`
-	Value     float64 `json:"value"`
-	Input     string  `json:"input"`
-	Success   bool    `json:"success"`
+type TxInfo struct {
+	Hash          string        `json:"hash"`
+	Timestamp     int           `json:"timestamp"`
+	BlockNumber   int           `json:"blockNumber"`
+	Confirmations int           `json:"confirmations"`
+	Success       bool          `json:"success"`
+	From          string        `json:"from"`
+	To            string        `json:"to"`
+	Value         float64       `json:"value"`
+	Input         string        `json:"input"`
+	GasLimit      int           `json:"gasLimit"`
+	GasUsed       int           `json:"gasUsed"`
+	Logs          []interface{} `json:"logs"`
+	Operations    []struct {
+		Timestamp       int      `json:"timestamp"`
+		TransactionHash string   `json:"transactionHash"`
+		Value           string   `json:"value"`
+		IntValue        int64    `json:"intValue"`
+		Type            string   `json:"type"`
+		IsEth           bool     `json:"isEth"`
+		Priority        int      `json:"priority"`
+		Address         string   `json:"address,omitempty"`
+		Addresses       []string `json:"addresses"`
+		UsdPrice        float64  `json:"usdPrice"`
+		TokenInfo       struct {
+			Address           string `json:"address"`
+			Name              string `json:"name"`
+			Decimals          string `json:"decimals"`
+			Symbol            string `json:"symbol"`
+			TotalSupply       string `json:"totalSupply"`
+			Owner             string `json:"owner"`
+			LastUpdated       int    `json:"lastUpdated"`
+			IssuancesCount    int    `json:"issuancesCount"`
+			HoldersCount      int    `json:"holdersCount"`
+			Image             string `json:"image"`
+			Website           string `json:"website"`
+			Coingecko         string `json:"coingecko"`
+			EthTransfersCount int    `json:"ethTransfersCount"`
+			Price             struct {
+				Rate            float64 `json:"rate"`
+				Diff            float64 `json:"diff"`
+				Diff7D          float64 `json:"diff7d"`
+				Ts              int     `json:"ts"`
+				MarketCapUsd    int     `json:"marketCapUsd"`
+				AvailableSupply int     `json:"availableSupply"`
+				Volume24H       float64 `json:"volume24h"`
+				Diff30D         float64 `json:"diff30d"`
+				VolDiff1        float64 `json:"volDiff1"`
+				VolDiff7        float64 `json:"volDiff7"`
+				VolDiff30       float64 `json:"volDiff30"`
+				Currency        string  `json:"currency"`
+			} `json:"price"`
+		} `json:"tokenInfo,omitempty"`
+		From string `json:"from,omitempty"`
+		To   string `json:"to,omitempty"`
+	} `json:"operations"`
 }

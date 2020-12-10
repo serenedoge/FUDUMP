@@ -8,6 +8,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 func main() {
@@ -58,19 +59,23 @@ func (api APIHandler) getRestAPIJson(baseURL string) string {
 
 func (api APIHandler) getBoughtEthPriceForToken(cryptoAddress, apiKey, tokenAddress string, decimals uint64) float64 {
 	var tokHist AddrTokHistory
-	var tsHist AddrTsHistory
-	var val float64
+	var tsHist TxInfo
+	var ct int
 	respStr := api.getRestAPIJson(fmt.Sprintf(ETHPLORERADDRHIST, cryptoAddress, apiKey, tokenAddress))
 	json.Unmarshal([]byte(respStr), &tokHist)
-	respStr = api.getRestAPIJson(fmt.Sprintf(ETHPLORERTSHIST, cryptoAddress, apiKey, tokHist.Operations[0].Timestamp))
-	json.Unmarshal([]byte(respStr), &tsHist)
-	for _, element := range tsHist {
-		if element.Timestamp == tokHist.Operations[0].Timestamp && tokHist.Operations[0].TransactionHash == element.Hash {
-			val, _ = strconv.ParseFloat(tokHist.Operations[0].Value, 64)
-			return element.Value / (val / math.Pow(10, float64(decimals)))
+	for i, v := range tokHist.Operations {
+		if strings.Compare(v.Type, "transfer") == 0 {
+			ct = i
+			break
 		}
 	}
-	return 0
+	respStr = api.getRestAPIJson(fmt.Sprintf(ETHPLORERTSHIST, tokHist.Operations[ct].TransactionHash, apiKey))
+	json.Unmarshal([]byte(respStr), &tsHist)
+	oplen := len(tsHist.Operations)
+	f1, _ := strconv.ParseFloat(tsHist.Operations[0].Value, 64)
+	f2, _ := strconv.ParseFloat(tsHist.Operations[oplen-1].Value, 64)
+
+	return f1 / f2
 }
 
 func (api APIHandler) getEthplorer(cryptoAddress, apiKey string) map[string]WalletAsset {
@@ -101,6 +106,7 @@ func (api APIHandler) getEthplorer(cryptoAddress, apiKey string) map[string]Wall
 			curr.CurrEthPrice = api.getZeroXCurrPrice(curr.Address, curr.Decimals)
 			curr.CurrUsdPrice = element.TokenInfo.Price.Rate
 			curr.BoughtEthPrice = api.getBoughtEthPriceForToken(cryptoAddress, apiKey, element.TokenInfo.Address, curr.Decimals)
+			curr.PercentChange = fmt.Sprintf("%.2f", ((curr.CurrEthPrice-curr.BoughtEthPrice)/curr.BoughtEthPrice)*100)
 			ethplorerJSON[element.TokenInfo.Name] = curr
 		}
 	}

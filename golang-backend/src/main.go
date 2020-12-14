@@ -12,17 +12,26 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/GETWALLET/", getWalletAssets)
+	http.HandleFunc("/GETQUOTE/", getQuote)
 	log.Fatal(http.ListenAndServe(":1234", nil))
 	return
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func getWalletAssets(w http.ResponseWriter, r *http.Request) {
 	api := &APIHandler{}
 	jsonString, _ := json.Marshal(api.getEthplorer(r.URL.Query()["walletAddress"][0], r.URL.Query()["apiKey"][0]))
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write(jsonString)
+}
+
+func getQuote(w http.ResponseWriter, r *http.Request) {
+	api := &APIHandler{}
+	respStr := api.getRestAPIJson(fmt.Sprintf(ZEROXURLPRICEFORMATSTR2, r.URL.Query()["buyToken"][0], r.URL.Query()["sellToken"][0], r.URL.Query()["sellAmount"][0]))
+	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Write([]byte(respStr))
 }
 
 func (api APIHandler) getZeroXCurrPrice(sellToken string, decimals uint64) float64 {

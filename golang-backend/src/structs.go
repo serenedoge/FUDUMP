@@ -2,6 +2,7 @@ package main
 
 const ZEROXURLFORMATSTR = "https://api.0x.org/swap/v1/quote?buyToken=%s&sellToken=%s&sellAmount=%s"
 const ZEROXURLPRICEFORMATSTR = "https://api.0x.org/swap/v1/quote?buyToken=%s&sellToken=%s&sellAmount=%d"
+const ZEROXURLPRICEFORMATSTR2 = "https://api.0x.org/swap/v1/quote?buyToken=%s&sellToken=%s&sellAmount=%s"
 const ETHPLORERFORMATSTR = "https://api.ethplorer.io/getAddressInfo/%s?apiKey=%s"
 const ETHPLORERADDRHIST = "https://api.ethplorer.io/getAddressHistory/%s?apiKey=%s&token=%s&limit=5"
 const ETHPLORERTSHIST = "https://api.ethplorer.io/getTxInfo/%s?apiKey=%s"
